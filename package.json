@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "amqplib": "^1.0.3",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "joi": "^18.1.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.5.0",
+    "rate-limiter-flexible": "^11.0.1",
+    "redis": "^5.12.1"
+  }
+}

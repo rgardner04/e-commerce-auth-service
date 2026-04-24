@@ -1,0 +1,51 @@
+services:
+  auth-service:
+    build:
+      context: .
+    container_name: e-commerce-auth-service
+    ports:
+      - 3000:3000
+    env_file:
+      - ./.env
+    depends_on:
+      - mongo
+      - redis
+      - rabbitmq
+  mongo:
+    image: mongo:latest
+    container_name: e-commerce-auth-db
+    ports:
+      - 27017:27017
+    volumes:
+      - auth-data:/data/db
+  redis:
+    env_file:
+      - ./.env
+    image: redis:8.6.2-alpine
+    container_name: e-commerce-auth-redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD}
+    restart: always
+  rabbitmq:
+    env_file:
+      - ./.env
+    image: rabbitmq:3-alpine
+    container_name: e-commerce-auth-rabbitmq
+    ports:
+      - 5672:5672
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBIT_MQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBIT_MQ_PASS}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+volumes:
+  auth-data:
+  redis-data:
+    driver: local
+  rabbitmq-data:
