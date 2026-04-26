@@ -4,6 +4,7 @@ const asyncWrapper = require("../utils/asyncWrapper");
 const validatorMiddleware = require("../middlewares/validatorMiddleware");
 const registerSchema = require("../validators/registerValidator");
 const loginSchema = require("../validators/loginValidator");
+const verifyEmailSchema = require("../validators/verifyEmailValidator");
 const authService = require("../services/authService");
 
 router.post(
@@ -11,6 +12,15 @@ router.post(
   validatorMiddleware(registerSchema),
   asyncWrapper(async (req, res) => {
     const { status, body } = await authService.register(req.body);
+    return res.status(status).send(body);
+  }),
+);
+
+router.post(
+  "/verify-email",
+  validatorMiddleware(verifyEmailSchema),
+  asyncWrapper(async (req, res) => {
+    const { status, body } = await authService.verifyEmail(req.body);
     return res.status(status).send(body);
   }),
 );

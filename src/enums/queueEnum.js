@@ -1,5 +1,5 @@
 const queueEnum = {
-  VERIFICATION_QUEUE: "VERIFICATION_QUEUE",
+  EMAIL_VERIFICATION_QUEUE: "EMAIL_VERIFICATION_QUEUE",
 };
 
 module.exports = queueEnum;

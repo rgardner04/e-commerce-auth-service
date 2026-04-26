@@ -1,6 +1,6 @@
 const queueEnum = require("../enums/queueEnum");
 const eventEnum = require("../enums/eventEnum");
-const getRabbitMq = require("../services/publisherService");
+const getRabbitMq = require("./publisherService");
 
 async function sendVerificationEmailEvent(email) {
   const { channel } = await getRabbitMq();
@@ -13,30 +13,28 @@ async function sendVerificationEmailEvent(email) {
   }
 
   try {
-    await channel.assertQueue(queueEnum.VERIFICATION_QUEUE, {
+    await channel.assertQueue(queueEnum.EMAIL_VERIFICATION_QUEUE, {
       durable: true,
       arguments: {
         "x-queue-type": "quorum",
       },
     });
 
-    const sendVerificationEmailEvent = getVerificationEmailEvent(email);
     channel.sendToQueue(
-      queueEnum.VERIFICATION_QUEUE,
-      Buffer.from(JSON.stringify(sendVerificationEmailEvent)),
+      queueEnum.EMAIL_VERIFICATION_QUEUE,
+      Buffer.from(
+        JSON.stringify({
+          type: eventEnum.SEND_VERIFICATION_EMAIL,
+          data: {
+            email: email,
+          },
+          timestamp: new Date(),
+        }),
+      ),
     );
   } catch (error) {
     console.log(`Error sending verification email event: ${error?.message}`);
   }
-}
-
-function getVerificationEmailEvent(email) {
-  return {
-    event: eventEnum.SEND_VERIFICATION_EMAIL,
-    data: {
-      email: email,
-    },
-  };
 }
 
 module.exports = {
