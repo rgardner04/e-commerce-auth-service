@@ -1,6 +1,8 @@
 const passwordService = require("./passwordService");
-const verificationEmailService = require("./verificationEmailService");
 const userService = require("./userService");
+const emailVerificationService = require("./emailVerificationService");
+const jwtService = require("./jwtService");
+const userRoleEnum = require('../enums/userRoleEnum')
 
 async function register(requestBody) {
   const { email, password, firstName, lastName } = requestBody;
@@ -12,9 +14,10 @@ async function register(requestBody) {
     hashedPassword,
     firstName,
     lastName,
+    role: userRoleEnum.USER,
   });
 
-  verificationEmailService.sendVerificationEmailEvent(email);
+  await emailVerificationService.sendVerificationEmailEvent(email);
 
   return {
     status: 201,

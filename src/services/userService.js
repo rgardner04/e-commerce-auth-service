@@ -1,12 +1,13 @@
 const user = require("../models/user");
 const userStatusEnum = require("../enums/userStatusEnum");
 
-async function createUser({ email, hashedPassword, firstName, lastName }) {
+async function createUser({ email, hashedPassword, firstName, lastName, role }) {
   await user.create({
     email,
     password: hashedPassword,
     firstName,
     lastName,
+    role: role,
     status: userStatusEnum.PENDING,
   });
 }

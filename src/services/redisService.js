@@ -8,7 +8,7 @@ async function connectToRedis(redisClient) {
     await redisClient.connect();
     console.log("Successfully connected to Redis.");
   } catch (error) {
-    console.log(`Error connecting to redis: ${error?.message}`);
+    console.log(`Error connecting to Redis: ${error?.message}`);
   }
 }
 

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const userRoleEnum = require("../enums/userRoleEnum");
 
 const user = new mongoose.Schema({
   email: {
@@ -31,6 +32,13 @@ const user = new mongoose.Schema({
     enum: {
       values: ["pending", "email_verified", "deactivated"],
       message: "{VALUE} is not a valid user status.",
+    },
+  },
+  role: {
+    type: String,
+    required: [true, "Please provide a valid role for the user."],
+    enum: {
+      values: Object.values(userRoleEnum),
     },
   },
 });

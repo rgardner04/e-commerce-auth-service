@@ -1,0 +1,51 @@
+name: e-commerce-infra
+services:
+  mongo:
+    image: mongo:latest
+    hostname: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo-data:/data/db
+    networks: 
+      - e-commerce-network
+  redis:
+    env_file:
+      - ./.env
+    image: redis:8.6.2-alpine
+    hostname: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data
+    networks:
+      - e-commerce-network
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD}
+    restart: always
+  rabbitmq:
+    env_file:
+      - ./.env
+    image: rabbitmq:3-alpine
+    hostname: rabbitmq
+    networks:
+      - e-commerce-network
+    ports:
+    - 5672:5672
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBIT_MQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBIT_MQ_PASS}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+volumes:
+  mongo-data:
+  redis-data:
+    driver: local
+  rabbitmq-data:
+networks:
+  e-commerce-network:
+    external: true
+    
+    

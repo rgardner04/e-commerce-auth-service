@@ -27,4 +27,6 @@ async function getRabbitMq() {
   }
 }
 
-module.exports = getRabbitMq;
+module.exports = {
+  getRabbitMq,
+};

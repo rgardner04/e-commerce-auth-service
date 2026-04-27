@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const verificationCodeStatusEnum = require("../enums/verificationCodeStatusEnum");
 
 const verificationCode = new mongoose.Schema({
   userId: {
@@ -27,7 +28,7 @@ const verificationCode = new mongoose.Schema({
   status: {
     type: String,
     enum: {
-      values: ["PENDING", "EXPIRED", "VALIDATED", "INVALIDATED"],
+      values: Object.values(verificationCodeStatusEnum),
       message: "{VALUE} is not a valid verification code status.",
     },
     required: [
