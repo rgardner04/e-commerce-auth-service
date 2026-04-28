@@ -1,8 +1,8 @@
-const user = require("../models/user");
+const userModel = require("../models/user");
 const userStatusEnum = require("../enums/userStatusEnum");
 
 async function createUser({ email, hashedPassword, firstName, lastName, role }) {
-  await user.create({
+  await userModel.create({
     email,
     password: hashedPassword,
     firstName,
@@ -13,7 +13,7 @@ async function createUser({ email, hashedPassword, firstName, lastName, role }) 
 }
 
 async function findUserById(userId) {
-  const user = await user.findById(userId);
+  const user = await userModel.findById(userId);
 
   if (!user) {
     throw new Error(`User not found for ID: ${userId}`);
@@ -23,7 +23,7 @@ async function findUserById(userId) {
 }
 
 async function findUserByEmail(email) {
-  const user = await user.findOne({ email: email });
+  const user = await userModel.findOne({ email: email });
 
   if (!user) {
     throw new Error(`User not found for email: ${email}`);

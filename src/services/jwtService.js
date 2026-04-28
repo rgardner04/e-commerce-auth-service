@@ -3,8 +3,8 @@ const refreshTokenModel = require("../models/refreshToken");
 const {
   JWT_PRIVATE_KEY,
   JWT_PUBLIC_KEY,
-  ACCESS_TOKEN_EXPIRY_IN_SECONDS,
-  REFRESH_TOKEN_EXPIRY_IN_SECONDS,
+  ACCESS_TOKEN_EXPIRY_SECONDS,
+  REFRESH_TOKEN_EXPIRY_SECONDS,
   AUTH_SERVICE_URL,
 } = process.env;
 const userRoleEnum = require("../enums/userRoleEnum");
@@ -33,7 +33,7 @@ function generateAccessToken(user) {
     },
     getPrivateKey(),
     {
-      expiresIn: `${ACCESS_TOKEN_EXPIRY_IN_SECONDS}s`,
+      expiresIn: `${ACCESS_TOKEN_EXPIRY_SECONDS}s`,
       algorithm: "RS256",
     },
   );
@@ -67,7 +67,7 @@ async function generateRefreshToken(user) {
     },
     getPrivateKey(),
     {
-      expiresIn: `${REFRESH_TOKEN_EXPIRY_IN_SECONDS}s`,
+      expiresIn: `${REFRESH_TOKEN_EXPIRY_SECONDS}s`,
       algorithm: "RS256",
     },
   );
