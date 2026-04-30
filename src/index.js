@@ -1,7 +1,5 @@
 require("dotenv").config({ path: "../.env" });
 const mongoose = require("mongoose");
-const { redisClient, connectToRedis } = require("./services/redisService");
-const publisherService = require("./services/publisherService");
 const { PORT, MONGO_DB_URI } = process.env;
 const errorMiddleware = require("./middlewares/errorMiddleware");
 const rateLimiterMiddleware = require("./middlewares/rateLimiterMiddleware");
@@ -24,8 +22,6 @@ async function startApplication() {
   try {
     setTimeout(async () => {
       await mongoose.connect(MONGO_DB_URI);
-      await connectToRedis(redisClient);
-      await publisherService.getRabbitMq();
     }, 10000);
 
     app.listen(parseInt(PORT) || 3000, () => {

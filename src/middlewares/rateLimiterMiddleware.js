@@ -1,9 +1,10 @@
 const { RateLimiterRedis, RateLimiterRes } = require("rate-limiter-flexible");
-const { redisClient } = require("../services/redisService");
+const redisService = require("../services/redisService");
 
 let limiters = null;
 
 function initializeRateLimiters() {
+  const redisClient = redisService.getRedisClient();
   if (!redisClient || !redisClient.isReady) {
     console.log("Failed to initialize rate limiters. Redis is not ready.");
     return null;

@@ -3,7 +3,7 @@ const verificationCode = require("../models/verificationCode");
 const verificationCodeStatusEnum = require("../enums/verificationCodeStatusEnum");
 const queueEnum = require("../enums/queueEnum");
 const eventEnum = require("../enums/eventEnum");
-const publisherService = require("./publisherService");
+const publisherService = require("./rabbitMqService");
 
 async function sendVerificationEmailEvent(email) {
   const { channel } = await publisherService.getRabbitMq();
