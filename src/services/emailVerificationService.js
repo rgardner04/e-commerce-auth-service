@@ -42,7 +42,7 @@ async function sendVerificationEmailEvent(email) {
 
 async function verifyEmail(code) {
   const verificationCodeObj = await verificationCode
-    .findOne({ verificationCode: code })
+    .findOne({ verificationCode: code, status: verificationCodeStatusEnum.PENDING })
     .lean();
 
   if (!verificationCodeObj) {

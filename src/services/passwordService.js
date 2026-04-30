@@ -5,6 +5,11 @@ async function generateHashedPassword(plaintextPassword) {
   return hashedPassword;
 }
 
+async function validatePassword(plaintextPassword, storedPassword) {
+  return await bcrypt.compare(plaintextPassword, storedPassword);
+}
+
 module.exports = {
   generateHashedPassword,
+  validatePassword,
 };

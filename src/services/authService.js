@@ -2,7 +2,8 @@ const passwordService = require("./passwordService");
 const userService = require("./userService");
 const emailVerificationService = require("./emailVerificationService");
 const jwtService = require("./jwtService");
-const userRoleEnum = require('../enums/userRoleEnum')
+const userRoleEnum = require('../enums/userRoleEnum');
+const userStatusEnum = require("../enums/userStatusEnum");
 
 async function register(requestBody) {
   const { email, password, firstName, lastName } = requestBody;
@@ -23,7 +24,7 @@ async function register(requestBody) {
     status: 201,
     body: {
       message:
-        "User registered successfully. Please validate your email to finish registering.",
+        `Succesfully registered as ${userStatusEnum.PENDING}. Please validate your email to access your account.`,
       status: "success",
     },
   };
@@ -60,13 +61,18 @@ async function login(requestBody) {
     throw new Error(`Failed to find account with email: ${email}`);
   }
 
-  await passwordService.validatePassword(password, user.password);
+  const isValidPassword = await passwordService.validatePassword(password, user.password);
+  if (!isValidPassword) {
+    throw new Error("Invalid password provided.");
+  }
+
+  await emailVerificationService.sendVerificationEmailEvent(email);
 
   return {
     status: 200,
     body: {
       message:
-        "Correct credentials provided. Please validate your email to finish logging in.",
+        "User details verified. Please validate your email to access your account.",
       status: "success",
     },
   };
