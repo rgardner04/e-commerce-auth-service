@@ -4,6 +4,7 @@ const emailService = require("./emailService");
 const jwtService = require("./jwtService");
 const userRoleEnum = require("../enums/userRoleEnum");
 const userStatusEnum = require("../enums/userStatusEnum");
+const authStageEnum = require("../enums/authStageEnum");
 
 async function register(requestBody) {
   const { email, password, firstName, lastName } = requestBody;
@@ -19,7 +20,7 @@ async function register(requestBody) {
     status: userStatusEnum.PENDING,
   });
 
-  await emailService.sendVerificationEmail(email);
+  await emailService.sendVerificationEmail(email, authStageEnum.REGISTER);
 
   return {
     status: 201,
@@ -35,7 +36,7 @@ async function verifyEmail(requestBody) {
 
   const user = await emailService.verifyEmail(verificationCode);
 
-  if (!user.status === userStatusEnum.EMAIL_VERIFIED) {
+  if (user.status !== userStatusEnum.EMAIL_VERIFIED) {
     await userModel.findByIdAndUpdate(user._id, {
       $set: { status: userStatusEnum.EMAIL_VERIFIED },
     });
@@ -71,7 +72,7 @@ async function login(requestBody) {
     throw new Error("Invalid password provided.");
   }
 
-  await emailService.sendVerificationEmail(email);
+  await emailService.sendVerificationEmail(email, authStageEnum.LOGIN);
 
   return {
     status: 200,

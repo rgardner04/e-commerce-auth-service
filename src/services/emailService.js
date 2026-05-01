@@ -5,7 +5,7 @@ const queueEnum = require("../enums/queueEnum");
 const eventEnum = require("../enums/eventEnum");
 const rabbitMqService = require("./rabbitMqService");
 
-async function sendVerificationEmail(email) {
+async function sendVerificationEmail(email, authStage) {
   try {
     const channel = await rabbitMqService.getRabbitMqChannel();
 
@@ -22,7 +22,8 @@ async function sendVerificationEmail(email) {
         JSON.stringify({
           type: eventEnum.SEND_VERIFICATION_EMAIL,
           data: {
-            email: email,
+            email,
+            authStage,
           },
           timestamp: new Date(),
         }),
@@ -30,7 +31,7 @@ async function sendVerificationEmail(email) {
     );
   } catch (error) {
     console.error(
-      `Couldn't send verification email event to subscriber service. Error: ${error instanceof Error ? error?.message : ""}`,
+      `Couldn't send ${eventEnum.SEND_VERIFICATION_EMAIL}. Error: ${error instanceof Error ? error?.message : ""}`,
     );
   }
 }

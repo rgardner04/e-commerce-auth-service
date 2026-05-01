@@ -5,10 +5,8 @@ let connection = null;
 let channel = null;
 
 async function getRabbitMqConnection() {
+  if (connection) return connection;
   try {
-    if (connection) {
-      return connection;
-    }
     connection = await amqp.connect(RABBIT_MQ_URL);
     return connection;
   } catch (error) {
@@ -20,6 +18,7 @@ async function getRabbitMqConnection() {
 }
 
 async function getRabbitMqChannel() {
+  if (channel) return channel;
   try {
     if (!connection) {
       await getRabbitMqConnection();
