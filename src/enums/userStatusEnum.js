@@ -1,7 +1,7 @@
 const userStatusEnum = {
-  PENDING: "pending",
-  EMAIL_VERIFIED: "email_verified",
-  DEACTIVATED: "deactivated",
+  PENDING: "PENDING",
+  EMAIL_VERIFIED: "EMAIL_VERIFIED",
+  DEACTIVATED: "DEACTIVATED",
 };
 
 module.exports = userStatusEnum;

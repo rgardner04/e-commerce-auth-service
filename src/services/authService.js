@@ -16,6 +16,7 @@ async function register(requestBody) {
     firstName,
     lastName,
     role: userRoleEnum.USER,
+    status: userStatusEnum.PENDING,
   });
 
   await emailService.sendVerificationEmail(email);
@@ -34,12 +35,18 @@ async function verifyEmail(requestBody) {
 
   const user = await emailService.verifyEmail(verificationCode);
 
+  if (!user.status === userStatusEnum.EMAIL_VERIFIED) {
+    await userModel.findByIdAndUpdate(user._id, {
+      $set: { status: userStatusEnum.EMAIL_VERIFIED },
+    });
+  }
+
   const { accessToken, refreshToken } = await jwtService.generateTokens(user);
 
   return {
     status: 200,
     body: {
-      message: `User email verified. User status has been updated to ${userStatusEnum.EMAIL_VERIFIED}`,
+      message: `User email verified.`,
       data: {
         accessToken,
         refreshToken,

@@ -63,8 +63,8 @@ async function verifyEmail(verificationCode) {
     throw new Error("Invalid verification code provided.");
   }
 
-  await verificationCode.updateOne(
-    { verificationCode: code, userId: user._id },
+  await verificationCodeModel.updateOne(
+    { verificationCode: verificationCode, userId: user._id },
     { $set: { status: verificationCodeStatusEnum.VALIDATED } },
   );
 
