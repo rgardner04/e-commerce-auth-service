@@ -5,11 +5,10 @@ function errorMiddleware(error, req, res, next) {
   }
 
   return res.status(500).send({
-    message: "An internal server error occurred.",
+    message: error?.message || "An internal server error occurred.",
     status: "failure",
     path: req.originalUrl,
     timestamp: new Date(),
-    details: error?.response || error?.message || error,
   });
 }
 

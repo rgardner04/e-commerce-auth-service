@@ -7,8 +7,7 @@ function validatorMiddleware(validationSchema) {
 
     if (error) {
       return res.status(400).send({
-        message: `Validation failed.`,
-        details: error?.message,
+        message: error?.message || "Validation failed.",
         path: req.originalUrl,
         timestamp: new Date(),
         status: "failure",

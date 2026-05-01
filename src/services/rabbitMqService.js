@@ -13,7 +13,7 @@ async function getRabbitMqConnection() {
     return connection;
   } catch (error) {
     console.error(
-      `Could not initialize RabbitMQ connection. Error: ${error instanceof Error ? error?.message : ''}`,
+      `Could not initialize RabbitMQ connection. Error: ${error instanceof Error ? error?.message : ""}`,
     );
     return null;
   }
@@ -22,13 +22,13 @@ async function getRabbitMqConnection() {
 async function getRabbitMqChannel() {
   try {
     if (!connection) {
-      getRabbitMqConnection();
+      await getRabbitMqConnection();
     }
-    channel = connection.createChannel();
+    channel = await connection.createChannel();
     return channel;
   } catch (error) {
     console.error(
-      `Could not initialize RabbitMQ channel. Error: ${error instanceof Error ? error?.message : ''}`,
+      `Could not initialize RabbitMQ channel. Error: ${error instanceof Error ? error?.message : ""}`,
     );
     return null;
   }
@@ -37,12 +37,13 @@ async function getRabbitMqChannel() {
 async function initializeRabbitMq() {
   try {
     if (!connection) {
-      getRabbitMqConnection();
+      await getRabbitMqConnection();
     }
     if (!channel) {
-      getRabbitMqChannel();
+      await getRabbitMqChannel();
     }
-    console.log("Successfully connected to RabbitMQ");
+
+    console.log(`Connected to RabbitMQ at ${RABBIT_MQ_URL}`);
 
     connection.on("close", () => {
       connection = null;
@@ -60,17 +61,17 @@ async function connectWithRetry() {
   while (attempts < maxAttempts) {
     try {
       await initializeRabbitMq();
-      return
+      return;
     } catch (error) {
       console.warn(
-        `Connection to RabbitMQ attempt ${attempts + 1} failed. Error: ${error instanceof Error ? error?.message : ''}`,
+        `Connection to RabbitMQ attempt ${attempts + 1} failed. Error: ${error instanceof Error ? error?.message : ""}`,
       );
       attempts++;
 
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
-  console.error("Could not connect to Redis after maximum attempts.");
+  console.error("Could not connect to RabbitMQ after maximum attempts.");
 }
 
 async function onModuleInit() {

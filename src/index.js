@@ -1,6 +1,6 @@
 require("dotenv").config({ path: "../.env" });
-const mongoose = require("mongoose");
-const { PORT, MONGO_DB_URI } = process.env;
+const { PORT } = process.env;
+require("./services/mongoDbService");
 const errorMiddleware = require("./middlewares/errorMiddleware");
 const rateLimiterMiddleware = require("./middlewares/rateLimiterMiddleware");
 const apiRouter = require("./routes/apiRouter");
@@ -20,10 +20,6 @@ app.use(errorMiddleware);
 
 async function startApplication() {
   try {
-    setTimeout(async () => {
-      await mongoose.connect(MONGO_DB_URI);
-    }, 10000);
-
     app.listen(parseInt(PORT) || 3000, () => {
       console.log(`Server is running at port: ${PORT || 3000}`);
     });

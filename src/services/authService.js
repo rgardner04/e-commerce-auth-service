@@ -1,30 +1,29 @@
-const passwordService = require("./passwordService");
-const userService = require("./userService");
-const emailVerificationService = require("./emailVerificationService");
+const bcrypt = require("bcrypt");
+const userModel = require("../models/user");
+const emailService = require("./emailService");
 const jwtService = require("./jwtService");
-const userRoleEnum = require('../enums/userRoleEnum');
+const userRoleEnum = require("../enums/userRoleEnum");
 const userStatusEnum = require("../enums/userStatusEnum");
 
 async function register(requestBody) {
   const { email, password, firstName, lastName } = requestBody;
 
-  const hashedPassword = await passwordService.generateHashedPassword(password);
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-  await userService.createUser({
+  await userModel.create({
     email,
-    hashedPassword,
+    password: hashedPassword,
     firstName,
     lastName,
     role: userRoleEnum.USER,
   });
 
-  await emailVerificationService.sendVerificationEmailEvent(email);
+  await emailService.sendVerificationEmail(email);
 
   return {
     status: 201,
     body: {
-      message:
-        `Succesfully registered as ${userStatusEnum.PENDING}. Please validate your email to access your account.`,
+      message: `User registered as ${userStatusEnum.PENDING}. Please validate your email to access your account.`,
       status: "success",
     },
   };
@@ -33,16 +32,14 @@ async function register(requestBody) {
 async function verifyEmail(requestBody) {
   const { verificationCode } = requestBody;
 
-  const userId = await emailVerificationService.verifyEmail(verificationCode);
-
-  const user = await userService.findUserById(userId);
+  const user = await emailService.verifyEmail(verificationCode);
 
   const { accessToken, refreshToken } = await jwtService.generateTokens(user);
 
   return {
     status: 200,
     body: {
-      message: "Email verified successfully.",
+      message: `User email verified. User status has been updated to ${userStatusEnum.EMAIL_VERIFIED}`,
       data: {
         accessToken,
         refreshToken,
@@ -55,24 +52,25 @@ async function verifyEmail(requestBody) {
 async function login(requestBody) {
   const { email, password } = requestBody;
 
-  const user = await userService.findUserByEmail(email);
+  const user = await userModel.findOne({ email });
 
   if (!user) {
-    throw new Error(`Failed to find account with email: ${email}`);
+    throw new Error(`Couldn't find user with email: ${email}`);
   }
 
-  const isValidPassword = await passwordService.validatePassword(password, user.password);
+  const isValidPassword = await bcrypt.compare(password, user.password);
+
   if (!isValidPassword) {
     throw new Error("Invalid password provided.");
   }
 
-  await emailVerificationService.sendVerificationEmailEvent(email);
+  await emailService.sendVerificationEmail(email);
 
   return {
     status: 200,
     body: {
       message:
-        "User details verified. Please validate your email to access your account.",
+        "User credentials verified. Please validate your email to access your account.",
       status: "success",
     },
   };

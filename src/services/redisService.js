@@ -12,7 +12,7 @@ function getRedisClient() {
     return redisClient;
   } catch (error) {
     console.error(
-      `Could not initialize Redis client. Error: ${error instanceof Error ? error?.message : ''}`,
+      `Could not initialize Redis client. Error: ${error instanceof Error ? error?.message : ""}`,
     );
     return null;
   }
@@ -24,9 +24,11 @@ async function initializeRedis() {
       getRedisClient();
     }
     await redisClient.connect();
-    console.log("Successfully connected to Redis.");
+    console.log(`Connected to Redis at ${REDIS_URL}`);
   } catch (error) {
-    console.log(`Error connecting to Redis: ${error?.message}`);
+    console.log(
+      `Could not connect to Redis. Error: ${error instanceof Error ? error?.message : ""}`,
+    );
   }
 }
 
@@ -39,7 +41,7 @@ async function connectWithRetry() {
       return;
     } catch (error) {
       console.warn(
-        `Connection to Redis attempt ${attempts + 1} failed. Error: ${error instanceof Error ? error?.message : ''}`,
+        `Connection to Redis attempt ${attempts + 1} failed. Error: ${error instanceof Error ? error?.message : ""}`,
       );
       attempts++;
 
@@ -48,7 +50,6 @@ async function connectWithRetry() {
   }
   console.error("Could not connect to Redis after maximum attempts.");
 }
-
 
 async function onModuleInit() {
   await connectWithRetry();
