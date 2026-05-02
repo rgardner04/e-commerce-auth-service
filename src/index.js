@@ -4,11 +4,14 @@ require("./services/mongoDbService");
 const errorMiddleware = require("./middlewares/errorMiddleware");
 const rateLimiterMiddleware = require("./middlewares/rateLimiterMiddleware");
 const apiRouter = require("./routes/apiRouter");
+const loggerService = require("./services/loggerService");
 
 const express = require("express");
 const app = express();
 
 app.enable("trust proxy");
+
+app.use(loggerService.getHttpLogger());
 
 app.use(express.json());
 

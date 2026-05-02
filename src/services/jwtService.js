@@ -9,6 +9,9 @@ const {
 } = process.env;
 const userRoleEnum = require("../enums/userRoleEnum");
 const refreshTokenStatusEnum = require("../enums/refreshTokenStatusEnum");
+const loggerService = require("./loggerService");
+
+const logger = loggerService.getLogger();
 
 function getPrivateKey() {
   if (!JWT_PRIVATE_KEY) {
@@ -25,7 +28,7 @@ function getPublicKey() {
 }
 
 function generateAccessToken(user) {
-  return jwt.sign(
+  const accessToken = jwt.sign(
     {
       iss: AUTH_SERVICE_URL,
       sub: user._id.toString(),
@@ -37,6 +40,10 @@ function generateAccessToken(user) {
       algorithm: "RS256",
     },
   );
+
+  logger.info({ userId: user._id.toString() }, "Generated access token.");
+
+  return accessToken;
 }
 
 async function revokePreviousRefreshTokens(userId, refreshToken) {
@@ -51,9 +58,20 @@ async function revokePreviousRefreshTokens(userId, refreshToken) {
   }
 
   const previousRefreshTokenIds = previousRefreshTokens.map((r) => r._id);
-  await refreshTokenModel.updateMany(
+
+  logger.info(
+    { userId, previousRefreshTokenIds },
+    "Revoking previous refresh tokens.",
+  );
+
+  const updateResult = await refreshTokenModel.updateMany(
     { _id: { $in: previousRefreshTokenIds } },
     { $set: { status: refreshTokenStatusEnum.REVOKED } },
+  );
+
+  logger.info(
+    { revokedCount: updateResult.modifiedCount },
+    "Revoked previous refresh tokens.",
   );
 }
 
@@ -81,12 +99,19 @@ async function generateRefreshToken(user) {
     await revokePreviousRefreshTokens(user._id, refreshToken),
   ]);
 
+  logger.info({ userId: user._id.toString() }, "Created refresh token.");
+
   return refreshToken;
 }
 
 async function generateTokens(user) {
   const accessToken = generateAccessToken(user);
   const refreshToken = await generateRefreshToken(user);
+
+  logger.info(
+    { userId: user._id.toString() },
+    "Generated access and refresh tokens.",
+  );
 
   return { accessToken, refreshToken };
 }
