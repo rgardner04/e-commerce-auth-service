@@ -1,6 +1,5 @@
 const { RateLimiterRedis, RateLimiterRes } = require("rate-limiter-flexible");
 const redisService = require("../services/redisService");
-const { scriptSha1 } = require("@redis/client/dist/lib/lua-script");
 const { RATE_LIMIT_POINTS, RATE_LIMIT_DURATIONS, RATE_LIMIT_BLOCK_DURATIONS } =
   process.env;
 
