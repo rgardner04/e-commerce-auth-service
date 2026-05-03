@@ -5,6 +5,7 @@ const queueEnum = require("../enums/queueEnum");
 const eventEnum = require("../enums/eventEnum");
 const rabbitMqService = require("./rabbitMqService");
 const loggerService = require("./loggerService");
+const CustomError = require("../utils/CustomError");
 
 const logger = loggerService.getLogger();
 
@@ -45,20 +46,40 @@ async function sendVerificationEmail(email, authStage) {
   }
 }
 
-async function verifyEmail(verificationCode) {
+async function verifyEmail(verificationCode, email) {
+  const user = await userModel.findOne({ email });
+
+  if (!user) {
+    logger.warn(
+      { email, verificationCode },
+      "Could not find user from email for verification code.",
+    );
+    throw new CustomError("Invalid email provided for verification code.", 401);
+  }
+
+  logger.info(
+    { userId: user._id.toString(), email: user.email, verificationCode },
+    "Found user associated with email.",
+  );
+
   const verificationCodeObj = await verificationCodeModel
     .findOne({
       verificationCode: verificationCode,
+      userId: user._id,
       status: verificationCodeStatusEnum.PENDING,
     })
     .lean();
 
   if (!verificationCodeObj) {
     logger.warn(
-      { verificationCode, foundVerificationCode: !!verificationCodeObj },
+      {
+        verificationCode,
+        foundVerificationCode: !!verificationCodeObj,
+        userId: user._id,
+      },
       "Could not find verification code document.",
     );
-    throw new Error("Invalid verification code provided.");
+    throw new CustomError("Invalid verification code provided.", 401);
   }
 
   logger.info(
@@ -69,25 +90,6 @@ async function verifyEmail(verificationCode) {
     "Found verification code document.",
   );
 
-  const user = await userModel.findById(verificationCodeObj.userId);
-
-  logger.info(
-    { userId: user._id.toString(), verificationCode },
-    "Found user associated with verification code.",
-  );
-
-  if (!user) {
-    logger.warn(
-      {
-        verificationCode,
-        foundUser: !!user,
-        verificationCodeUserId: verificationCodeObj.userId,
-      },
-      "Could not find user document from user ID in verification code",
-    );
-    throw new Error(`User not found for provided verification code.`);
-  }
-
   const currentTime = new Date().getTime();
   const expiresAt = new Date(verificationCodeObj.expiresAt).getTime();
 
@@ -96,7 +98,7 @@ async function verifyEmail(verificationCode) {
       { currentTime, expiresAt, verificationCode: verificationCode },
       "The provided verification code is expired.",
     );
-    throw new Error("The provided verification code is expired.");
+    throw new CustomError("The provided verification code is expired.", 401);
   }
 
   if (verificationCode !== verificationCodeObj.verificationCode) {
@@ -107,7 +109,7 @@ async function verifyEmail(verificationCode) {
       },
       "Invalid verification code provided.",
     );
-    throw new Error("Invalid verification code provided.");
+    throw new CustomError("Invalid verification code provided.", 401);
   }
 
   const updatedVerificationCode = await verificationCodeModel.findOneAndUpdate(

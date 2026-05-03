@@ -10,19 +10,20 @@ const {
 const userRoleEnum = require("../enums/userRoleEnum");
 const refreshTokenStatusEnum = require("../enums/refreshTokenStatusEnum");
 const loggerService = require("./loggerService");
+const CustomError = require("../utils/CustomError");
 
 const logger = loggerService.getLogger();
 
 function getPrivateKey() {
   if (!JWT_PRIVATE_KEY) {
-    throw new Error("JWT private key not configured.");
+    throw new CustomError("JWT private key not configured.", 501);
   }
   return JWT_PRIVATE_KEY.replaceAll("\\n", "\n");
 }
 
 function getPublicKey() {
   if (!JWT_PUBLIC_KEY) {
-    throw new Error("JWT public key not configured.");
+    throw new CustomError("JWT public key not configured.", 501);
   }
   return JWT_PUBLIC_KEY.replaceAll("\\n", "\n");
 }
