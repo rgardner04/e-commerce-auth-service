@@ -1,7 +1,22 @@
 const { RateLimiterRedis, RateLimiterRes } = require("rate-limiter-flexible");
 const redisService = require("../services/redisService");
+const { scriptSha1 } = require("@redis/client/dist/lib/lua-script");
+const { RATE_LIMIT_POINTS, RATE_LIMIT_DURATIONS, RATE_LIMIT_BLOCK_DURATIONS } =
+  process.env;
 
 let limiters = null;
+
+const rateLimiterPoints = RATE_LIMIT_POINTS?.split(",")?.map((p) =>
+  parseInt(p),
+) || [25, 100, 400];
+
+const rateLimiterDurations = RATE_LIMIT_DURATIONS?.split(",")?.map((d) =>
+  parseInt(d),
+) || [60, 3600, 86400];
+
+const rateLimiterBlockDurations = RATE_LIMIT_BLOCK_DURATIONS?.split(",")?.map(
+  (b) => parseInt(b),
+) || [30, 1800, 43200];
 
 function initializeRateLimiters() {
   const redisClient = redisService.getRedisClient();
@@ -21,9 +36,9 @@ function initializeRateLimiters() {
         limiter: new RateLimiterRedis({
           storeClient: redisClient,
           useRedisPackage: true,
-          points: 10,
-          duration: 60,
-          blockDuration: 30,
+          points: rateLimiterPoints[0],
+          duration: rateLimiterDurations[0],
+          blockDuration: rateLimiterBlockDurations[0],
         }),
       },
       perHour: {
@@ -31,9 +46,9 @@ function initializeRateLimiters() {
         limiter: new RateLimiterRedis({
           storeClient: redisClient,
           useRedisPackage: true,
-          points: 1000,
-          duration: 3600,
-          blockDuration: 1800,
+          points: rateLimiterPoints[1],
+          duration: rateLimiterDurations[1],
+          blockDuration: rateLimiterBlockDurations[1],
         }),
       },
       perDay: {
@@ -41,9 +56,9 @@ function initializeRateLimiters() {
         limiter: new RateLimiterRedis({
           storeClient: redisClient,
           useRedisPackage: true,
-          points: 2500,
-          duration: 86400,
-          blockDuration: 43200,
+          points: rateLimiterPoints[2],
+          duration: rateLimiterDurations[2],
+          blockDuration: rateLimiterBlockDurations[2],
         }),
       },
     };
