@@ -7,7 +7,7 @@ const userStatusEnum = require("../enums/userStatusEnum");
 const authStageEnum = require("../enums/authStageEnum");
 const loggerService = require("./loggerService");
 const CustomError = require("../utils/CustomError");
-const { VERIFICATION_CODE_LENGTH } = process.env;
+const { VERIFICATION_CODE_LENGTH, REFRESH_TOKEN_EXPIRY_SECONDS } = process.env;
 
 const logger = loggerService.getLogger();
 
@@ -86,7 +86,7 @@ function getRegister() {
   };
 }
 
-async function verifyEmail(requestBody) {
+async function verifyEmail(requestBody, res) {
   const { verificationCode, email } = requestBody;
 
   logger.info({ verificationCode, email }, "Attempting to verify email.");
@@ -106,13 +106,20 @@ async function verifyEmail(requestBody) {
 
   const { accessToken, refreshToken } = await jwtService.generateTokens(user);
 
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "Strict",
+    path: "/api/auth/refresh",
+    maxAge: parseInt(REFRESH_TOKEN_EXPIRY_SECONDS) * 1000,
+  });
+
   return {
     status: 200,
     body: {
       message: `Verified user email.`,
       data: {
         accessToken,
-        refreshToken,
       },
       status: "success",
     },
@@ -133,8 +140,7 @@ function getVerifyEmail() {
         inputFields: {
           verificationCode: {
             type: "text",
-            minLength: VERIFICATION_CODE_LENGTH,
-            maxLength: VERIFICATION_CODE_LENGTH,
+            verificationCodeLength: parseInt(VERIFICATION_CODE_LENGTH),
             required: true,
           },
         },
@@ -205,23 +211,27 @@ function getLogin() {
   return {
     status: 200,
     body: {
-      loginFormMainHeader: "Welcome back",
-      loginFormSubHeader: "Enter your credentials to continue",
-      inputFields: {
-        email: {
-          label: "Email",
-          placeholder: "Enter your email",
-          type: "email",
-          required: true,
+      message: "Login data retrieved.",
+      status: "success",
+      data: {
+        loginFormMainHeader: "Welcome back",
+        loginFormSubHeader: "Enter your credentials to continue",
+        inputFields: {
+          email: {
+            label: "Email",
+            placeholder: "Enter your email",
+            type: "email",
+            required: true,
+          },
+          password: {
+            label: "Password",
+            placeholder: "Enter your password",
+            type: "password",
+            required: true,
+          },
         },
-        password: {
-          label: "Password",
-          placeholder: "Enter your password",
-          type: "password",
-          required: true,
-        },
+        loginFormButtonText: "Sign in",
       },
-      loginFormButtonText: "Sign in",
     },
   };
 }

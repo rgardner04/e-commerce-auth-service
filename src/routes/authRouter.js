@@ -25,7 +25,7 @@ router.post(
   "/verify-email",
   validatorMiddleware(verifyEmailSchema),
   asyncWrapper(async (req, res) => {
-    const { status, body } = await authService.verifyEmail(req.body);
+    const { status, body } = await authService.verifyEmail(req.body, res);
     return res.status(status).send(body);
   }),
 );
