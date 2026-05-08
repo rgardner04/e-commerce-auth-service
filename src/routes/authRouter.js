@@ -16,6 +16,11 @@ router.post(
   }),
 );
 
+router.get("/register", (_, res) => {
+  const { status, body } = authService.getRegister();
+  return res.status(status).send(body);
+});
+
 router.post(
   "/verify-email",
   validatorMiddleware(verifyEmailSchema),
@@ -25,6 +30,11 @@ router.post(
   }),
 );
 
+router.get("/verify-email", (_, res) => {
+  const { status, body } = authService.getVerifyEmail();
+  return res.status(status).send(body);
+});
+
 router.post(
   "/login",
   validatorMiddleware(loginSchema),
@@ -33,5 +43,10 @@ router.post(
     return res.status(status).send(body);
   }),
 );
+
+router.get("/login", (_, res) => {
+  const { status, body } = authService.getLogin();
+  return res.status(status).send(body);
+});
 
 module.exports = router;

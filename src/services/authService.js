@@ -7,6 +7,7 @@ const userStatusEnum = require("../enums/userStatusEnum");
 const authStageEnum = require("../enums/authStageEnum");
 const loggerService = require("./loggerService");
 const CustomError = require("../utils/CustomError");
+const { VERIFICATION_CODE_LENGTH } = process.env;
 
 const logger = loggerService.getLogger();
 
@@ -42,6 +43,49 @@ async function register(requestBody) {
   };
 }
 
+function getRegister() {
+  logger.info("Attempting to get register data for display.");
+
+  return {
+    status: 200,
+    body: {
+      message: "Register data retrieved.",
+      status: "success",
+      data: {
+        registerFormMainHeader: "Create an account",
+        registerFormSubHeader: "Fill in your details to get started",
+        inputFields: {
+          firstName: {
+            label: "First name",
+            placeholder: "Enter your first name",
+            type: "text",
+            required: true,
+          },
+          lastName: {
+            label: "Last name",
+            placeholder: "Enter your last name",
+            type: "text",
+            required: true,
+          },
+          email: {
+            label: "Email",
+            placeholder: "Enter your email",
+            type: "email",
+            required: true,
+          },
+          password: {
+            label: "Password",
+            placeholder: "Enter a strong password",
+            type: "password",
+            required: true,
+          },
+        },
+        registerFormButtonText: "Sign up",
+      },
+    },
+  };
+}
+
 async function verifyEmail(requestBody) {
   const { verificationCode, email } = requestBody;
 
@@ -71,6 +115,31 @@ async function verifyEmail(requestBody) {
         refreshToken,
       },
       status: "success",
+    },
+  };
+}
+
+function getVerifyEmail() {
+  logger.info("Attempting to get verify email data for display.");
+
+  return {
+    status: 200,
+    body: {
+      message: "Verify email data retrieved.",
+      status: "success",
+      data: {
+        emailVerificationFormMainHeader: "Verify your email",
+        emailVerificationFormSubHeader: "An email has been sent to ",
+        inputFields: {
+          verificationCode: {
+            type: "text",
+            minLength: VERIFICATION_CODE_LENGTH,
+            maxLength: VERIFICATION_CODE_LENGTH,
+            required: true,
+          },
+        },
+        emailVerificationFormButtonText: "Verify",
+      },
     },
   };
 }
@@ -130,8 +199,38 @@ async function login(requestBody) {
   }
 }
 
+function getLogin() {
+  logger.info("Attempting to get login data for display.");
+
+  return {
+    status: 200,
+    body: {
+      loginFormMainHeader: "Welcome back",
+      loginFormSubHeader: "Enter your credentials to continue",
+      inputFields: {
+        email: {
+          label: "Email",
+          placeholder: "Enter your email",
+          type: "email",
+          required: true,
+        },
+        password: {
+          label: "Password",
+          placeholder: "Enter your password",
+          type: "password",
+          required: true,
+        },
+      },
+      loginFormButtonText: "Sign in",
+    },
+  };
+}
+
 module.exports = {
   register,
+  getRegister,
   verifyEmail,
+  getVerifyEmail,
   login,
+  getLogin,
 };
