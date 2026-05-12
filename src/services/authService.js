@@ -195,11 +195,10 @@ async function login(requestBody) {
       "An error occured while attempting to login the user.",
     );
     return {
-      status: 200,
+      status: 400,
       body: {
-        message:
-          "If an account exists for this email, a verification code has been sent.",
-        status: "success",
+        message: "An invalid email or password has been provided.",
+        status: "failure",
       },
     };
   }
