@@ -7,7 +7,15 @@ const userStatusEnum = require("../enums/userStatusEnum");
 const authStageEnum = require("../enums/authStageEnum");
 const loggerService = require("./loggerService");
 const CustomError = require("../utils/CustomError");
-const { VERIFICATION_CODE_LENGTH, REFRESH_TOKEN_EXPIRY_SECONDS } = process.env;
+const {
+  VERIFICATION_CODE_LENGTH,
+  REFRESH_TOKEN_EXPIRY_SECONDS,
+  DEFAULT_ADMIN_EMAIL,
+  DEFAULT_ADMIN_PASSWORD,
+} = process.env;
+const adminRegisterRequestModel = require("../models/adminRegisterRequest");
+const mongoose = require("mongoose");
+const adminRegisterRequestEnum = require("../enums/adminRegisterRequestEnum");
 
 const logger = loggerService.getLogger();
 
@@ -151,11 +159,11 @@ function getVerifyEmail() {
 }
 
 async function login(requestBody) {
-  const { email, password } = requestBody;
+  const { email, password, userRole } = requestBody;
 
   try {
     logger.info(
-      { email, hasPassword: !!password },
+      { email, hasPassword: !!password, userRole },
       "Attempting to login user.",
     );
 
@@ -177,6 +185,13 @@ async function login(requestBody) {
         "Invalid password provided.",
       );
       throw new CustomError("Invalid password provided.", 401);
+    }
+
+    if (userRole === userRoleEnum.ADMIN && user.role !== userRoleEnum.ADMIN) {
+      throw new CustomError(
+        `User with email ${email} does not have ${userRoleEnum.ADMIN} access.`,
+        401,
+      );
     }
 
     await emailService.sendVerificationEmail(email, authStageEnum.LOGIN);
@@ -235,6 +250,176 @@ function getLogin() {
   };
 }
 
+async function adminRegister(requestBody) {
+  const { email, password, firstName, lastName } = requestBody;
+
+  logger.info(
+    { email, hasPassword: !!password, firstName, lastName },
+    "Attempting to register admin user.",
+  );
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const session = await mongoose.startSession();
+
+  try {
+    await session.withTransaction(async () => {
+      const createdAdminUser = await userModel.create(
+        [
+          {
+            email,
+            password: hashedPassword,
+            firstName,
+            lastName,
+            role: userRoleEnum.ADMIN,
+            status: userStatusEnum.PENDING,
+          },
+        ],
+        { session },
+      );
+
+      logger.info(
+        { userId: createdAdminUser[0]._id.toString() },
+        "Created new admin user.",
+      );
+
+      const createdAdminRegisterRequest =
+        await adminRegisterRequestModel.create(
+          [
+            {
+              userId: createdAdminUser[0]._id,
+              status: adminRegisterRequestEnum.PENDING,
+            },
+          ],
+          { session },
+        );
+
+      logger.info(
+        {
+          adminRegisterRequestId: createdAdminRegisterRequest[0]._id.toString(),
+        },
+        "Created admin register request.",
+      );
+    });
+  } catch (error) {
+    logger.error(
+      { errorMessage: error instanceof Error ? error?.message : "" },
+      "Transaction failed when attempting to register admin user.",
+    );
+    throw error;
+  } finally {
+    await session.endSession();
+  }
+
+  return {
+    status: 201,
+    body: {
+      message: `Registered admin user as ${userStatusEnum.PENDING}. Your account will need approved by an existing admin for access.`,
+      status: "success",
+    },
+  };
+}
+
+async function getAdminRegisterRequests(requestQuery) {
+  const { status, page, limit } = requestQuery;
+
+  logger.info({ status, page, limit }, "Fetching admin register requests.");
+
+  const adminRegisterRequests = await adminRegisterRequestModel
+    .find({
+      status,
+    })
+    .skip((page - 1) * limit)
+    .limit(limit);
+
+  if (
+    !Array.isArray(adminRegisterRequests) ||
+    adminRegisterRequests.length === 0
+  ) {
+    return {
+      status: 204,
+      body: {
+        message: "No admin register requests found.",
+        status: "success",
+        data: {
+          adminRegisterRequests: [],
+          page,
+          limit,
+          status,
+          totalDocuments: 0,
+          totalPages: 0,
+        },
+      },
+    };
+  }
+
+  logger.info({ adminRegisterRequests: adminRegisterRequests.length });
+
+  const totalDocuments = await adminRegisterRequestModel.countDocuments({
+    status,
+  });
+  const totalPages = Math.max(1, Math.floor(totalDocuments / limit));
+
+  return {
+    status: 200,
+    body: {
+      message: "Fetched admin register requests.",
+      status: "success",
+      data: {
+        adminRegisterRequests,
+        page,
+        limit,
+        status,
+        totalDocuments,
+        totalPages,
+      },
+    },
+  };
+}
+
+async function onModuleInit() {
+  try {
+    const existingAdminUser = await userModel.findOne({
+      email: DEFAULT_ADMIN_EMAIL,
+    });
+
+    if (!existingAdminUser) {
+      const hashedDefaultAdminPassword = await bcrypt.hash(
+        String(DEFAULT_ADMIN_PASSWORD),
+        10,
+      );
+
+      const newAdminUser = await userModel.create({
+        email: DEFAULT_ADMIN_EMAIL,
+        password: hashedDefaultAdminPassword,
+        firstName: "Admin",
+        lastName: "Default",
+        role: userRoleEnum.ADMIN,
+        status: userStatusEnum.EMAIL_VERIFIED,
+      });
+
+      logger.info(
+        { adminUserId: newAdminUser._id.toString() },
+        "Created new default admin user.",
+      );
+    } else {
+      logger.info(
+        { adminUserId: existingAdminUser._id.toString() },
+        "Default admin user already created.",
+      );
+    }
+  } catch (error) {
+    logger.error(
+      { errorMessage: error instanceof Error ? error?.message : "" },
+      "Error finding/creating default admin user.",
+    );
+  }
+}
+
+(async () => {
+  await onModuleInit();
+})();
+
 module.exports = {
   register,
   getRegister,
@@ -242,4 +427,6 @@ module.exports = {
   getVerifyEmail,
   login,
   getLogin,
+  adminRegister,
+  getAdminRegisterRequests,
 };

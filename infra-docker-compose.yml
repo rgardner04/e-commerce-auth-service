@@ -5,9 +5,10 @@ services:
     hostname: mongo
     ports:
       - 27017:27017
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     volumes:
       - mongo-data:/data/db
-    networks: 
+    networks:
       - e-commerce-network
   redis:
     env_file:
@@ -33,7 +34,7 @@ services:
     networks:
       - e-commerce-network
     ports:
-    - 5672:5672
+      - 5672:5672
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBIT_MQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBIT_MQ_PASS}
@@ -47,5 +48,3 @@ volumes:
 networks:
   e-commerce-network:
     external: true
-    
-    

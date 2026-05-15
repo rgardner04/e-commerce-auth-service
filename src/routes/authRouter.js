@@ -6,6 +6,7 @@ const registerSchema = require("../validators/registerValidator");
 const loginSchema = require("../validators/loginValidator");
 const verifyEmailSchema = require("../validators/verifyEmailValidator");
 const authService = require("../services/authService");
+const adminRegisterRequestsSchema = require("../validators/adminRegisterRequestsValidator");
 
 router.post(
   "/register",
@@ -48,5 +49,24 @@ router.get("/login", (_, res) => {
   const { status, body } = authService.getLogin();
   return res.status(status).send(body);
 });
+
+router.post(
+  "/admin/register",
+  validatorMiddleware(registerSchema),
+  asyncWrapper(async (req, res) => {
+    const { status, body } = await authService.adminRegister(req.body);
+    return res.status(status).send(body);
+  }),
+);
+
+router.get(
+  "/admin/register/requests",
+  validatorMiddleware(adminRegisterRequestsSchema),
+  asyncWrapper(async (req, res) => {
+    const { query } = req;
+    const { status, body } = await authService.getAdminRegisterRequests(query);
+    return res.status(status).send(body);
+  }),
+);
 
 module.exports = router;
