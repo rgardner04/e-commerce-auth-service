@@ -163,7 +163,7 @@ async function login(requestBody) {
 
   try {
     logger.info(
-      { email, hasPassword: !!password, userRole },
+      { email, hasPassword: !!password },
       "Attempting to login user.",
     );
 
@@ -199,13 +199,13 @@ async function login(requestBody) {
     };
   } catch (error) {
     logger.error(
-      { error, email, hasPassword: !!password },
+      { error: error?.message, email, hasPassword: !!password },
       "An error occured while attempting to login the user.",
     );
     return {
       status: 400,
       body: {
-        message: "An invalid email or password has been provided.",
+        message: error?.message,
         status: "failure",
       },
     };
