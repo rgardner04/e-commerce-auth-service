@@ -159,7 +159,7 @@ function getVerifyEmail() {
 }
 
 async function login(requestBody) {
-  const { email, password, userRole } = requestBody;
+  const { email, password } = requestBody;
 
   try {
     logger.info(
@@ -185,13 +185,6 @@ async function login(requestBody) {
         "Invalid password provided.",
       );
       throw new CustomError("Invalid password provided.", 401);
-    }
-
-    if (userRole === userRoleEnum.ADMIN && user.role !== userRoleEnum.ADMIN) {
-      throw new CustomError(
-        `User with email ${email} does not have ${userRoleEnum.ADMIN} access.`,
-        401,
-      );
     }
 
     await emailService.sendVerificationEmail(email, authStageEnum.LOGIN);
@@ -377,6 +370,71 @@ async function getAdminRegisterRequests(requestQuery) {
   };
 }
 
+async function adminLogin(requestBody) {
+  const { email, password } = requestBody;
+
+  try {
+    logger.info(
+      { email, hasPassword: !!password },
+      "Attempting to login admin user.",
+    );
+
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      logger.warn(
+        { email, foundUser: !!user },
+        "Could not find user with email.",
+      );
+      throw new CustomError(`Couldn't find user with email: ${email}`, 404);
+    }
+
+    if (!user.role === userRoleEnum.ADMIN) {
+      logger.warn(
+        { email, userRole: user.role },
+        `Could not login user. User does not have ${userRoleEnum.ADMIN} role.`,
+      );
+      throw new CustomError(
+        `Coudln't login user. User does not have ${userRoleEnum.ADMIN} role.`,
+        401,
+      );
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+
+    if (!isValidPassword) {
+      logger.warn(
+        { userId: user._id.toString(), hasPassword: !!password },
+        "Invalid password provided.",
+      );
+      throw new CustomError("Invalid password provided.", 401);
+    }
+
+    await emailService.sendVerificationEmail(email, authStageEnum.LOGIN);
+
+    return {
+      status: 200,
+      body: {
+        message:
+          "If an account exists for this email, a verification code has been sent.",
+        status: "success",
+      },
+    };
+  } catch (error) {
+    logger.error(
+      { error, email, hasPassword: !!password },
+      "An error occured while attempting to login the user.",
+    );
+    return {
+      status: 400,
+      body: {
+        message: "An invalid email or password has been provided.",
+        status: "failure",
+      },
+    };
+  }
+}
+
 async function onModuleInit() {
   try {
     const existingAdminUser = await userModel.findOne({
@@ -429,4 +487,5 @@ module.exports = {
   getLogin,
   adminRegister,
   getAdminRegisterRequests,
+  adminLogin,
 };

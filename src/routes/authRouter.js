@@ -69,4 +69,13 @@ router.get(
   }),
 );
 
+router.post(
+  "/admin/login",
+  validatorMiddleware(loginSchema),
+  asyncWrapper(async (req, res) => {
+    const { status, body } = await authService.adminLogin(req.body);
+    return res.status(status).send(body);
+  }),
+);
+
 module.exports = router;
