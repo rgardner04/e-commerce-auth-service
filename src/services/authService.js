@@ -389,7 +389,7 @@ async function adminLogin(requestBody) {
       throw new CustomError(`Couldn't find user with email: ${email}`, 404);
     }
 
-    if (!user.role === userRoleEnum.ADMIN) {
+    if (user.role !== userRoleEnum.ADMIN) {
       logger.warn(
         { email, userRole: user.role },
         `Could not login user. User does not have ${userRoleEnum.ADMIN} role.`,
