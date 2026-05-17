@@ -16,6 +16,8 @@ const {
 const adminRegisterRequestModel = require("../models/adminRegisterRequest");
 const mongoose = require("mongoose");
 const adminRegisterRequestEnum = require("../enums/adminRegisterRequestEnum");
+const errorTypeEnum = require("../enums/errorTypeEnum");
+const shouldShowErrorMessage = require("../utils/shouldShowErrorMessage");
 
 const logger = loggerService.getLogger();
 
@@ -174,7 +176,11 @@ async function login(requestBody) {
         { email, foundUser: !!user },
         "Could not find user with email.",
       );
-      throw new CustomError(`Couldn't find user with email: ${email}`, 404);
+      throw new CustomError(
+        `Couldn't find user with email: ${email}`,
+        404,
+        errorTypeEnum.USER_NOT_FOUND,
+      );
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);
@@ -184,7 +190,11 @@ async function login(requestBody) {
         { userId: user._id.toString(), hasPassword: !!password },
         "Invalid password provided.",
       );
-      throw new CustomError("Invalid password provided.", 401);
+      throw new CustomError(
+        "Invalid password provided.",
+        401,
+        errorTypeEnum.INVALID_CREDENTIALS,
+      );
     }
 
     await emailService.sendVerificationEmail(email, authStageEnum.LOGIN);
@@ -202,10 +212,13 @@ async function login(requestBody) {
       { error: error?.message, email, hasPassword: !!password },
       "An error occured while attempting to login the user.",
     );
+
     return {
       status: 400,
       body: {
-        message: error?.message,
+        message: shouldShowErrorMessage(error)
+          ? error?.message
+          : "An invalid email or password was provided.",
         status: "failure",
       },
     };
@@ -386,7 +399,11 @@ async function adminLogin(requestBody) {
         { email, foundUser: !!user },
         "Could not find user with email.",
       );
-      throw new CustomError(`Couldn't find user with email: ${email}`, 404);
+      throw new CustomError(
+        `Couldn't find user with email: ${email}`,
+        404,
+        errorTypeEnum.USER_NOT_FOUND,
+      );
     }
 
     if (user.role !== userRoleEnum.ADMIN) {
@@ -397,6 +414,7 @@ async function adminLogin(requestBody) {
       throw new CustomError(
         `Coudln't login user. User does not have ${userRoleEnum.ADMIN} role.`,
         401,
+        errorTypeEnum.INVALID_ROLE,
       );
     }
 
@@ -407,7 +425,11 @@ async function adminLogin(requestBody) {
         { userId: user._id.toString(), hasPassword: !!password },
         "Invalid password provided.",
       );
-      throw new CustomError("Invalid password provided.", 401);
+      throw new CustomError(
+        "Invalid password provided.",
+        401,
+        errorTypeEnum.INVALID_CREDENTIALS,
+      );
     }
 
     await emailService.sendVerificationEmail(email, authStageEnum.LOGIN);
@@ -428,7 +450,9 @@ async function adminLogin(requestBody) {
     return {
       status: 400,
       body: {
-        message: "An invalid email or password has been provided.",
+        message: shouldShowErrorMessage(error)
+          ? error?.message
+          : "An invalid email or password was provided.",
         status: "failure",
       },
     };

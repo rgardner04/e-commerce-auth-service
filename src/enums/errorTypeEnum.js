@@ -1,0 +1,8 @@
+const errorTypeEnum = {
+  DEFAULT_ERROR: "DEFAULT_ERROR",
+  INVALID_CREDENTIALS: "INVALID_CREDENTIALS",
+  INVALID_ROLE: "INVALID_ROLE",
+  USER_NOT_FOUND: "USER_NOT_FOUND",
+};
+
+module.exports = errorTypeEnum;
