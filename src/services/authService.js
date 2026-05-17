@@ -409,10 +409,10 @@ async function adminLogin(requestBody) {
     if (user.role !== userRoleEnum.ADMIN) {
       logger.warn(
         { email, userRole: user.role },
-        `Could not login user. User does not have ${userRoleEnum.ADMIN} role.`,
+        `Unable to log in user. You do not have ${userRoleEnum.ADMIN} access.`,
       );
       throw new CustomError(
-        `Coudln't login user. User does not have ${userRoleEnum.ADMIN} role.`,
+        `Unable to log in user. You do not have ${userRoleEnum.ADMIN} access.`,
         401,
         errorTypeEnum.INVALID_ROLE,
       );
