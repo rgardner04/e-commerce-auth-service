@@ -1,57 +1,35 @@
 const amqp = require("amqplib");
 const { RABBIT_MQ_URL } = process.env;
+const loggerService = require("./loggerService");
+
+const logger = loggerService.getLogger();
 
 let connection = null;
 let channel = null;
 
 async function getRabbitMqConnection() {
   if (connection) return connection;
-  try {
-    connection = await amqp.connect(RABBIT_MQ_URL);
-    return connection;
-  } catch (error) {
-    console.error(
-      `Could not initialize RabbitMQ connection. Error: ${error instanceof Error ? error?.message : ""}`,
-    );
-    return null;
-  }
+
+  connection = await amqp.connect(RABBIT_MQ_URL);
+  logger.info("RabbitMQ connection initialized.");
 }
 
 async function getRabbitMqChannel() {
   if (channel) return channel;
-  try {
-    if (!connection) {
-      await getRabbitMqConnection();
-    }
-    channel = await connection.createChannel();
-    return channel;
-  } catch (error) {
-    console.error(
-      `Could not initialize RabbitMQ channel. Error: ${error instanceof Error ? error?.message : ""}`,
-    );
-    return null;
-  }
+
+  channel = await connection.createChannel();
+  logger.info("RabbitMQ channel initialized.");
 }
 
 async function initializeRabbitMq() {
-  try {
-    if (!connection) {
-      await getRabbitMqConnection();
-    }
-    if (!channel) {
-      await getRabbitMqChannel();
-    }
+  await getRabbitMqConnection();
+  await getRabbitMqChannel();
 
-    console.log(`Connected to RabbitMQ at ${RABBIT_MQ_URL}`);
-
-    connection.on("close", () => {
-      connection = null;
-      channel = null;
-    });
-  } catch (error) {
-    console.log(`Failed to connect to RabbitMQ: ${error?.message}`);
-    throw error;
-  }
+  logger.info(`Connected to RabbitMQ at ${RABBIT_MQ_URL}`);
+  connection.on("close", () => {
+    connection = null;
+    channel = null;
+  });
 }
 
 async function connectWithRetry() {

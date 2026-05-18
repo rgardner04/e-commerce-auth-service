@@ -15,7 +15,7 @@ app.use(loggerService.getHttpLogger());
 
 app.use(express.json());
 
-app.use(rateLimiterMiddleware);
+//app.use(rateLimiterMiddleware);
 
 app.use("/api", apiRouter);
 

@@ -1,35 +1,24 @@
 const { createClient } = require("redis");
 const { REDIS_URL } = process.env;
+const loggerService = require("./loggerService");
+
+const logger = loggerService.getLogger();
 
 let redisClient = null;
 
 function getRedisClient() {
-  try {
-    if (redisClient) {
-      return redisClient;
-    }
-    redisClient = createClient({ url: REDIS_URL });
-    return redisClient;
-  } catch (error) {
-    console.error(
-      `Could not initialize Redis client. Error: ${error instanceof Error ? error?.message : ""}`,
-    );
-    return null;
-  }
+  if (redisClient) return redisClient;
+
+  redisClient = createClient({ url: REDIS_URL });
 }
 
 async function initializeRedis() {
-  try {
-    if (!redisClient) {
-      getRedisClient();
-    }
-    await redisClient.connect();
-    console.log(`Connected to Redis at ${REDIS_URL}`);
-  } catch (error) {
-    console.log(
-      `Could not connect to Redis. Error: ${error instanceof Error ? error?.message : ""}`,
-    );
+  if (!redisClient) {
+    getRedisClient();
   }
+  await redisClient.connect();
+
+  logger.info(`Connected to Redis at ${REDIS_URL}`);
 }
 
 async function connectWithRetry() {

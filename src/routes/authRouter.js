@@ -7,9 +7,20 @@ const loginSchema = require("../validators/loginValidator");
 const verifyEmailSchema = require("../validators/verifyEmailValidator");
 const authService = require("../services/authService");
 const adminRegisterRequestsSchema = require("../validators/adminRegisterRequestsValidator");
+const newRateLimiterMiddleware = require("../middlewares/newRateLimiterMiddleware");
+const CustomRateLimiter = require("../utils/CustomRateLimiter");
 
 router.post(
   "/register",
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerMinute", 25, 60, 30),
+  ),
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerHour", 250, 3600, 1800),
+  ),
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerDay", 2500, 86400, 43200),
+  ),
   validatorMiddleware(registerSchema),
   asyncWrapper(async (req, res) => {
     const { status, body } = await authService.register(req.body);
@@ -17,13 +28,22 @@ router.post(
   }),
 );
 
-router.get("/register", (_, res) => {
+router.get("/register", (_req, res) => {
   const { status, body } = authService.getRegister();
   return res.status(status).send(body);
 });
 
 router.post(
   "/verify-email",
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerMinute", 25, 60, 30),
+  ),
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerHour", 250, 3600, 1800),
+  ),
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerDay", 2500, 86400, 43200),
+  ),
   validatorMiddleware(verifyEmailSchema),
   asyncWrapper(async (req, res) => {
     const { status, body } = await authService.verifyEmail(req.body, res);
@@ -31,13 +51,22 @@ router.post(
   }),
 );
 
-router.get("/verify-email", (_, res) => {
+router.get("/verify-email", (_req, res) => {
   const { status, body } = authService.getVerifyEmail();
   return res.status(status).send(body);
 });
 
 router.post(
   "/login",
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerMinute", 25, 60, 30),
+  ),
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerHour", 250, 3600, 1800),
+  ),
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerDay", 2500, 86400, 43200),
+  ),
   validatorMiddleware(loginSchema),
   asyncWrapper(async (req, res) => {
     const { status, body } = await authService.login(req.body);
@@ -45,13 +74,22 @@ router.post(
   }),
 );
 
-router.get("/login", (_, res) => {
+router.get("/login", (_req, res) => {
   const { status, body } = authService.getLogin();
   return res.status(status).send(body);
 });
 
 router.post(
   "/admin/register",
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerMinute", 25, 60, 30),
+  ),
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerHour", 250, 3600, 1800),
+  ),
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerDay", 2500, 86400, 43200),
+  ),
   validatorMiddleware(registerSchema),
   asyncWrapper(async (req, res) => {
     const { status, body } = await authService.adminRegister(req.body);
@@ -71,6 +109,15 @@ router.get(
 
 router.post(
   "/admin/login",
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerMinute", 25, 60, 30),
+  ),
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerHour", 250, 3600, 1800),
+  ),
+  newRateLimiterMiddleware(
+    new CustomRateLimiter("postRegisterPerDay", 2500, 86400, 43200),
+  ),
   validatorMiddleware(loginSchema),
   asyncWrapper(async (req, res) => {
     const { status, body } = await authService.adminLogin(req.body);
